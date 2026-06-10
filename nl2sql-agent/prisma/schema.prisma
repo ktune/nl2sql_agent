@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id            Int           @id
+  name          String
+  gender        String
+  email         String
+
+  department_id Int
+  manager_id    String?
+
+  department    Department    @relation(fields: [department_id], references: [id])
+
+  manager       Manager?      @relation(fields: [manager_id], references: [id])
+
+  attendances   Attendance[]
+  salary        SalaryRecord?
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String
+  location  String
+  budget    Float
+
+  employees Employee[]
+}
+
+model Manager {
+  id            String @id
+  name          String
+  email         String
+  department_id Int
+
+  employees     Employee[]
+}
+
+model Attendance {
+  id               Int      @id @default(autoincrement())
+  employee_id      Int
+  date             DateTime
+  status           String
+
+  employee Employee @relation(fields: [employee_id], references: [id])
+}
+
+model SalaryRecord {
+  id             Int      @id @default(autoincrement())
+  employee_id    Int      @unique
+  amount         Float
+  effective_date DateTime
+
+  employee Employee @relation(fields: [employee_id], references: [id])
+}
+
+model QueryLog {
+  id         Int      @id @default(autoincrement())
+  query      String
+  type       String
+  sql        String?  @db.Text
+  status     String
+  error      String?
+  created_at DateTime @default(now())
+}

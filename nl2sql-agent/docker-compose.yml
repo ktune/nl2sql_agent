@@ -1,0 +1,43 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: nl2sql_mysql
+    environment:
+      MYSQL_DATABASE: nl2sql_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama
+    container_name: nl2sql_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  backend:
+    build: .
+    container_name: nl2sql_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:root@mysql:3306/nl2sql_db
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: llama3
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+volumes:
+  mysql_data:
+  ollama_data:
